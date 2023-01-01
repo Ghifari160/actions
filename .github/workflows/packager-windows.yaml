@@ -1,0 +1,38 @@
+name: Package Windows release
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        type: string
+        description: Installation package name
+        required: true
+      archive-name:
+        type: string
+        description: Binary archive
+        required: true
+
+jobs:
+  repackage_windows:
+    runs-on: ubuntu-22.04
+    env:
+      PKGNAME: ${{inputs.package-name}}.zip
+    steps:
+    - name: Prepare directories
+      run: mkdir -p out
+    - name: Download artifacts
+      id: artifacts
+      uses: actions/download-artifact@v3
+    - name: Extract TGZ archive
+      env:
+        INPUT: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-name}}/${{inputs.archive-name}}
+      run: tar -zxvf "$INPUT" -C out
+    - name: Create Zip archive
+      run: |
+        cd out && \
+        zip -r "../$PKGNAME" . && \
+        cd ..
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{env.PKGNAME}}
+        path: ${{env.PKGNAME}}
