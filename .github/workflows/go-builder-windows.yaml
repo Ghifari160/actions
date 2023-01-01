@@ -1,0 +1,21 @@
+name: Build Go Windows binaries
+on:
+  workflow_call:
+    inputs:
+      output:
+        type: string
+        description: Binary output name
+        required: true
+      tags:
+        type: string
+        description: Build tags
+
+jobs:
+  build-windows_386:
+    uses: ./.github/workflows/go-builder.yaml
+    with:
+      goos: windows
+      goarch: 386
+      archid: windows_x86
+      output: ${{inputs.output}}
+      tags: ${{inputs.tags}}
