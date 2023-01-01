@@ -41,13 +41,13 @@ jobs:
         AMD64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-amd64}}/${{inputs.archive-amd64}}
         ARM64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-arm64}}/${{inputs.archive-arm64}}
       run: |
-        mkdir input out && \
-        tar -zxvf "$AMD64" -C input && \
-        tar -zxvf "$ARM64" -C input
+        mkdir -p input/amd64 input/arm64 out && \
+        tar -zxvf "$AMD64" -C input/amd64 && \
+        tar -zxvf "$ARM64" -C input/arm64
     - name: Create universal binary
       env:
-        AMD64: input/${{env.OUTPUT}}
-        ARM64: input/${{env.OUTPUT}}
+        AMD64: input/amd64/${{env.OUTPUT}}
+        ARM64: input/arm64/${{env.OUTPUT}}
       run: makefat "out/$OUTPUT" "$AMD64" "$ARM64"
     - name: Create archive
       run: |
