@@ -1,0 +1,37 @@
+name: Build Go macOS universal binary
+on:
+  workflow_call:
+    inputs:
+      output:
+        type: string
+        description: Binary output name
+        required: true
+      tags:
+        type: string
+        description: Build tags
+
+jobs:
+  build-macos_amd64:
+    uses: ./.github/workflows/go-builder.yaml
+    with:
+      goos: darwin
+      goarch: amd64
+      archid: macos_amd64
+      output: ${{inputs.output}}
+      tags: ${{inputs.tags}}
+  build-macos_arm64:
+    uses: ./.github/workflows/go-builder.yaml
+    with:
+      goos: darwin
+      goarch: arm64
+      archid: macos_arm64
+      output: ${{inputs.output}}
+      tags: ${{inputs.tags}}
+  build-macos:
+    needs: [ build-macos_amd64, build-macos_arm64 ]
+    uses: ./.github/workflows/fat-builder.yaml
+    with:
+      archive-amd64: ${{inputs.output}}-macos_amd64.tar.gz
+      archive-arm64: ${{inputs.output}}-macos_arm64.tar.gz
+      archid: macos
+      output: ${{inputs.output}}
