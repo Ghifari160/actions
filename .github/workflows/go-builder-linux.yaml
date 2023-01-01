@@ -1,0 +1,29 @@
+name: Build Go Linux binaries
+on:
+  workflow_call:
+    inputs:
+      output:
+        type: string
+        description: Binary output name
+        required: true
+      tags:
+        type: string
+        description: Build tags
+
+jobs:
+  build-linux_386:
+    uses: ./.github/workflows/go-builder.yaml
+    with:
+      goos: linux
+      goarch: 386
+      archid: linux_x86
+      output: ${{inputs.output}}
+      tags: ${{inputs.tags}}
+  build-linux_arm:
+    uses: ./.github/workflows/go-builder.yaml
+    with:
+      goos: linux
+      goarch: arm
+      archid: linux_arm
+      output: ${{inputs.output}}
+      tags: ${{inputs.tags}}
