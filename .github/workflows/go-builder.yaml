@@ -1,0 +1,54 @@
+name: Build Go binary
+on:
+  workflow_call:
+    inputs:
+      goos:
+        type: string
+        description: GOOS
+        required: true
+      goarch:
+        type: string
+        description: GOARCH
+        required: true
+      archid:
+        type: string
+        description: Arch ID
+        required: true
+      output:
+        type: string
+        description: Binary output name
+        required: true
+      tags:
+        type: string
+        description: Build tags
+
+jobs:
+  build:
+    name: build-${{inputs.archid}}
+    runs-on: ubuntu-22.04
+    env:
+      GOOS: ${{inputs.goos}}
+      GOARCH: ${{inputs.goarch}}
+      ARCHID: ${{inputs.archid}}
+      TAGS: ${{inputs.tags}}
+      OUT: ${{inputs.output}}
+      ARCHIVE: ${{inputs.output}}-${{inputs.archid}}.tar.gz
+    steps:
+      - name: Setup source repo
+        uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "^1.19.3"
+      - name: Build binary
+        run: go build -tags "$TAGS" -o "out/$OUT" .
+      - name: Create archive
+        run: |
+          cd out && \
+          tar -zcvf "../$ARCHIVE" . && \
+          cd ..
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.ARCHIVE}}
+          path: ${{env.ARCHIVE}}
