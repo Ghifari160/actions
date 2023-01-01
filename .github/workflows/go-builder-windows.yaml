@@ -9,6 +9,9 @@ on:
       tags:
         type: string
         description: Build tags
+      prebuild:
+        type: string
+        description: Command to run before building
 
 jobs:
   build-windows_386:
@@ -19,3 +22,4 @@ jobs:
       archid: windows_x86
       output: ${{inputs.output}}
       tags: ${{inputs.tags}}
+      prebuild: ${{inputs.prebuild}}

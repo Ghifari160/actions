@@ -9,6 +9,9 @@ on:
       tags:
         type: string
         description: Build tags
+      prebuild:
+        type: string
+        description: Command to run before building
 
 jobs:
   build-linux_386:
@@ -19,6 +22,7 @@ jobs:
       archid: linux_x86
       output: ${{inputs.output}}
       tags: ${{inputs.tags}}
+      prebuild: ${{inputs.prebuild}}
   build-linux_arm:
     uses: ./.github/workflows/go-builder.yaml
     with:
@@ -27,3 +31,4 @@ jobs:
       archid: linux_arm
       output: ${{inputs.output}}
       tags: ${{inputs.tags}}
+      prebuild: ${{inputs.prebuild}}

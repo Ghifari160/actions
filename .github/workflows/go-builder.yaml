@@ -21,6 +21,9 @@ on:
       tags:
         type: string
         description: Build tags
+      prebuild:
+        type: string
+        description: Command to run before building
 
 jobs:
   build:
@@ -40,6 +43,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: "^1.19.3"
+      - name: Run prebuild command
+        run: ${{inputs.prebuild}}
       - name: Build binary
         run: go build -tags "$TAGS" -o "out/$OUT" .
       - name: Create archive

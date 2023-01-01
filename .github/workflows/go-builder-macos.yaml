@@ -9,6 +9,9 @@ on:
       tags:
         type: string
         description: Build tags
+      prebuild:
+        type: string
+        description: Command to run before building
 
 jobs:
   build-macos_amd64:
@@ -19,6 +22,7 @@ jobs:
       archid: macos_amd64
       output: ${{inputs.output}}
       tags: ${{inputs.tags}}
+      prebuild: ${{inputs.prebuild}}
   build-macos_arm64:
     uses: ./.github/workflows/go-builder.yaml
     with:
@@ -27,6 +31,7 @@ jobs:
       archid: macos_arm64
       output: ${{inputs.output}}
       tags: ${{inputs.tags}}
+      prebuild: ${{inputs.prebuild}}
   build-macos:
     needs: [ build-macos_amd64, build-macos_arm64 ]
     uses: ./.github/workflows/fat-builder.yaml
