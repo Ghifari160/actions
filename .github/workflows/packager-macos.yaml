@@ -58,13 +58,13 @@ jobs:
           #!/bin/bash
 
           echo "Fixing permissions"
-          find "/${{env.INSTALLPATH}}" -type f -exec chmod a+x \{\} \;
+          find "/${{env.INSTALLPATH}}/bin" -type f -exec chmod a+x \{\} \;
 
           echo "Creating symbolic link"
-          cd "/${{env.INSTALLPATH}}"
+          cd "/${{env.INSTALLPATH}}/bin"
           find . -type f -exec rm -rf /usr/local/bin\{\} \;
           cd /usr/local/bin/
-          find "/${{env.INSTALLPATH}}" -type f -exec ln -s \{\} . \;
+          find "/${{env.INSTALLPATH}}/bin" -type f -exec ln -s \{\} . \;
     - name: Fix permissions
       run: |
         chmod -R a+x "$PKGSCRIPTS"

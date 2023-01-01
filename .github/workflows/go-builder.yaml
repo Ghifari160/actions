@@ -46,7 +46,9 @@ jobs:
       - name: Run prebuild command
         run: ${{inputs.prebuild}}
       - name: Build binary
-        run: go build -tags "$TAGS" -o "out/$OUT" .
+        run: go build -tags "$TAGS" -o "out/bin/$OUT" .
+      - name: Copy license file
+        run: cp LICENSE out/
       - name: Create archive
         run: |
           cd out && \

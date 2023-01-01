@@ -41,14 +41,16 @@ jobs:
         AMD64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-amd64}}/${{inputs.archive-amd64}}
         ARM64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-arm64}}/${{inputs.archive-arm64}}
       run: |
-        mkdir -p input/amd64 input/arm64 out && \
+        mkdir -p input/amd64 input/arm64 out/bin && \
         tar -zxvf "$AMD64" -C input/amd64 && \
         tar -zxvf "$ARM64" -C input/arm64
     - name: Create universal binary
       env:
-        AMD64: input/amd64/${{env.OUTPUT}}
-        ARM64: input/arm64/${{env.OUTPUT}}
-      run: makefat "out/$OUTPUT" "$AMD64" "$ARM64"
+        AMD64: input/amd64/bin/${{env.OUTPUT}}
+        ARM64: input/arm64/bin/${{env.OUTPUT}}
+      run: makefat "out/bin/$OUTPUT" "$AMD64" "$ARM64"
+    - name: Copy LICENSE file
+      run: cp input/amd64/LICENSE out/
     - name: Create archive
       run: |
         cd out && \
