@@ -1,0 +1,108 @@
+on:
+  workflow_call:
+    inputs:
+      identifier:
+        type: string
+        description: Product identifier
+        required: true
+      version:
+        type: string
+        description: Product version
+        required: true
+      package-name:
+        type: string
+        description: Installation package name
+        required: true
+      install-path:
+        type: string
+        description: Installation path
+        required: true
+      install-title:
+        type: string
+        description: Installation title
+        required: true
+      archive-name:
+        type: string
+        description: Binary archive
+        required: true
+
+jobs:
+  package_macos:
+    runs-on: macos-12
+    env:
+      PKGROOT: pkg-root
+      PKGOUT: pkg-out
+      PKGSCRIPTS: pkg-scripts
+      PKGINTERMEDIATE: pkg-intermediate
+      PKGNAME: ${{inputs.package-name}}.pkg
+      IDENTIFIER: ${{inputs.identifier}}
+      VERSION: ${{inputs.version}}
+      INSTALLPATH: ${{inputs.install-path}}
+      INSTALLTITLE: ${{inputs.install-title}}
+    steps:
+    - name: Prepare directories
+      run: mkdir -p "$PKGROOT/$INSTALLPATH" "$PKGOUT" "$PKGSCRIPTS" "$PKGINTERMEDIATE"
+    - name: Download artifacts
+      id: artifacts
+      uses: actions/download-artifact@v3
+    - name: Extract archive
+      env:
+        INPUT: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-name}}/${{inputs.archive-name}}
+      run: tar -zxvf "$INPUT" -C "$PKGROOT/$INSTALLPATH"
+    - name: Write postinstall script
+      uses: DamianReeves/write-file-action@v1.2
+      with:
+        path: ${{env.PKGSCRIPTS}}/postinstall
+        write-mode: overwrite
+        contents: |
+          #!/bin/bash
+
+          echo "Fixing permissions"
+          find "/${{env.INSTALLPATH}}" -type f -exec chmod a+x \{\} \;
+
+          echo "Creating symbolic link"
+          cd "/${{env.INSTALLPATH}}"
+          find . -type f -exec rm -rf /usr/local/bin\{\} \;
+          cd /usr/local/bin/
+          find "/${{env.INSTALLPATH}}" -type f -exec ln -s \{\} . \;
+    - name: Fix permissions
+      run: |
+        chmod -R a+x "$PKGSCRIPTS"
+    - name: Build inner package
+      run: |
+        pkgbuild \
+          --identifier="$IDENTIFIER" \
+          --version="$VERSION" \
+          --scripts="$PKGSCRIPTS" \
+          --root="$PKGROOT" \
+          "$PKGINTERMEDIATE/$IDENTIFIER.pkg"
+    - name: Write distribution file
+      uses: DamianReeves/write-file-action@v1.2
+      with:
+        path: pkg-distribution
+        write-mode: overwrite
+        contents: |
+          <?xml version="1.0" encoding="utf-8" standalone="no"?>
+          <installer-gui-script minSpecVersion="1">
+              <title>${{env.INSTALLTITLE}}</title>
+              <options hostArchitectures="x86_64, arm64" customize="never" allow-external-scripts="no" />
+              <domains enable_localSystem="true" />
+              <choices-outline>
+                  <line choice="${{env.IDENTIFIER}}.choice" />
+              </choices-outline>
+              <choice id="${{env.IDENTIFIER}}.choice" title="${{env.INSTALLTITLE}}">
+                  <pkg-ref id="${{env.IDENTIFIER}}.pkg" />
+              </choice>
+              <pkg-ref id="${{env.IDENTIFIER}}.pkg" auth="Root">${{env.IDENTIFIER}}.pkg</pkg-ref>
+          </installer-gui-script>
+    - name: Build outer package
+      run: |
+        productbuild \
+          --distribution=pkg-distribution \
+          --package-path="$PKGINTERMEDIATE" \
+          "$PKGOUT/$PKGNAME"
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{env.PKGNAME}}
+        path: ${{env.PKGOUT}}/${{env.PKGNAME}}
