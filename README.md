@@ -14,3 +14,4 @@ Please refer to the actual workflow file for supported inputs.
 | `ghifari160/actions/.github/workflows/go-builder-windows.yaml@v0.1.0` | Builds Go Windows binaries (x86).                       |
 | `ghifari160/actions/.github/workflows/go-builder.yaml@v0.1.0`         | Builds Go binary for the specified `GOOS` and `GOARCH`. |
 | `ghifari160/actions/.github/workflows/packager-macos.yaml@v0.1.0`     | Packages for a macOS release.                           |
+| `ghifari160/actions/.github/workflows/packager-windows.yaml@main`     | Packages for a Windows release.                         |
