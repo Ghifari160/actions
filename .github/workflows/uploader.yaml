@@ -1,0 +1,77 @@
+name: Upload release archive
+on:
+  workflow_call:
+    inputs:
+      archive-name:
+        type: string
+        description: Archive to upload
+        required: true
+      archive-mime:
+        type: string
+        description: Archive MIME type
+        required: true
+      release-upload:
+        type: boolean
+        description: Upload to release page?
+        required: true
+      release-tag:
+        type: string
+        default: ${{github.ref}}
+        description: Release tag
+      s3-upload:
+        type: boolean
+        description: Upload to S3 bucket?
+        required: true
+      s3-provider:
+        type: string
+        default: digitalocean
+        description: S3 Provider
+      s3-region:
+        type: string
+        default: nyc3
+        description: S3 Region
+      s3-bucket:
+        type: string
+        description: S3 Bucket path
+    secrets:
+      s3-access-key:
+        description: S3 access key
+        required: false
+      s3-secret-key:
+        description: S3 secret key
+        required: false
+
+jobs:
+  upload-release:
+    runs-on: ubuntu-22.04
+    if: ${{inputs.release-upload}}
+    steps:
+    - name: Download build artifacts
+      id: artifacts
+      uses: actions/download-artifact@v3
+    - name: Upload artifacts to release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{inputs.release-tag}}
+        files: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-name}}/${{inputs.archive-name}}
+
+  upload-s3:
+    runs-on: ubuntu-22.04
+    if: ${{inputs.s3-upload}}
+    steps:
+    - name: Setup s3cmd
+      uses: s3-actions/s3cmd@v1.3.0
+      with:
+        provider: ${{inputs.s3-provider}}
+        region: ${{inputs.s3-region}}
+        access_key: ${{secrets.s3-access-key}}
+        secret_key: ${{secrets.s3-secret-key}}
+    - name: Download build artifacts
+      id: artifacts
+      uses: actions/download-artifact@v3
+    - name: Upload artifacts to S3
+      env:
+        INPUT: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-name}}/${{inputs.archive-name}}
+        MIME: ${{inputs.archive-mime}}
+        OUTPUT: ${{inputs.s3-bucket}}
+      run: s3cmd put "$INPUT" --mime-type "$MIME" -P "$OUTPUT"
