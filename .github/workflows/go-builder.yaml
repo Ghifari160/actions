@@ -30,8 +30,6 @@ jobs:
     name: build-${{inputs.archid}}
     runs-on: ubuntu-22.04
     env:
-      GOOS: ${{inputs.goos}}
-      GOARCH: ${{inputs.goarch}}
       ARCHID: ${{inputs.archid}}
       TAGS: ${{inputs.tags}}
       OUT: ${{inputs.output}}
@@ -46,6 +44,9 @@ jobs:
       - name: Run prebuild command
         run: ${{inputs.prebuild}}
       - name: Build binary
+        env:
+          GOOS: ${{inputs.goos}}
+          GOARCH: ${{inputs.goarch}}
         run: go build -tags "$TAGS" -o "out/bin/$OUT" .
       - name: Copy license file
         run: cp LICENSE out/
