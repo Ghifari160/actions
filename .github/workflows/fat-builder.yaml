@@ -1,0 +1,61 @@
+name: Build macOS universal binary
+on:
+  workflow_call:
+    inputs:
+      archive-amd64:
+        type: string
+        description: AMD64 binary archive
+        required: true
+      archive-arm64:
+        type: string
+        description: ARM64 binary archive
+        required: true
+      archid:
+        type: string
+        description: Arch ID
+        required: true
+      output:
+        type: string
+        description: Binary output name
+        required: true
+
+jobs:
+  build:
+    name: build_${{inputs.archid}}
+    runs-on: ubuntu-22.04
+    env:
+      OUTPUT: ${{inputs.output}}
+      ARCHIVE: ${{inputs.output}}-${{inputs.archid}}.tar.gz
+    steps:
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: "^1.19.3"
+    - name: Setup makefat
+      run: go install github.com/randall77/makefat@latest
+    - name: Download artifacts
+      id: artifacts
+      uses: actions/download-artifact@v3
+    - name: Unarchive artifacts
+      env:
+        AMD64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-amd64}}/${{inputs.archive-amd64}}
+        ARM64: ${{steps.artifacts.outputs.download-path}}/${{inputs.archive-arm64}}/${{inputs.archive-arm64}}
+      run: |
+        mkdir input out && \
+        tar -zxvf "$AMD64" -C input && \
+        tar -zxvf "$ARM64" -C input
+    - name: Create universal binary
+      env:
+        AMD64: input/${{env.OUTPUT}}
+        ARM64: input/${{env.OUTPUT}}
+      run: makefat "out/$OUTPUT" "$AMD64" "$ARM64"
+    - name: Create archive
+      run: |
+        cd out && \
+        tar -zcvf "../$ARCHIVE" . && \
+        cd ..
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{env.ARCHIVE}}
+        path: ${{env.ARCHIVE}}
